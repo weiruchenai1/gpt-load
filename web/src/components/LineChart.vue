@@ -605,12 +605,13 @@ onMounted(() => {
   font-weight: 600;
 }
 
-/* 浅色主题 - 白色渐变文字 */
+/* 浅色主题 - 深色文字 */
 :root:not(.dark) .chart-title {
-  background: linear-gradient(45deg, #fff, #f0f0f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  background-clip: unset;
 }
 
 /* 暗黑主题 - 白色文字 */

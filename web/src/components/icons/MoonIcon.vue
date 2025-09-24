@@ -1,11 +1,12 @@
 <script setup lang="ts">
-const { size = 16 } = defineProps<{ size?: number }>();
+import { withDefaults } from "vue";
+const props = withDefaults(defineProps<{ size?: number }>(), { size: 16 });
 </script>
 
 <template>
   <svg
-    :width="size"
-    :height="size"
+    :width="props.size"
+    :height="props.size"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"

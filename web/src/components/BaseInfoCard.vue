@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DashboardStatsResponse } from "@/types/models";
 import { NCard, NGrid, NGridItem, NSpace, NTag, NTooltip } from "naive-ui";
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import KeyIcon from "./icons/KeyIcon.vue";
 import ClockIcon from "./icons/ClockIcon.vue";
@@ -43,18 +43,31 @@ const formatTrend = (trend: number): string => {
 
 // 监听stats变化并更新动画值
 const updateAnimatedValues = () => {
-  if (stats.value) {
-    setTimeout(() => {
-      animatedValues.value = {
-        key_count:
-          (stats.value?.key_count?.value ?? 0) /
-          ((stats.value?.key_count?.value ?? 1) + (stats.value?.key_count?.sub_value ?? 1)),
-        rpm: Math.min(100 + (stats.value?.rpm?.trend ?? 0), 100) / 100,
-        request_count: Math.min(100 + (stats.value?.request_count?.trend ?? 0), 100) / 100,
-        error_rate: (100 - (stats.value?.error_rate?.value ?? 0)) / 100,
-      };
-    }, 0);
+  if (!stats.value) {
+    return;
   }
+  nextTick(() => {
+    const kcValue = stats.value?.key_count?.value ?? 0;
+    const kcSub = stats.value?.key_count?.sub_value ?? 0;
+    const kcTotal = kcValue + kcSub;
+    const keyCountRatio = kcTotal > 0 ? kcValue / kcTotal : 0;
+
+    const rpmTrend = stats.value?.rpm?.trend ?? 0;
+    const rpmRatio = Math.min(Math.max((100 + rpmTrend) / 100, 0), 1);
+
+    const reqTrend = stats.value?.request_count?.trend ?? 0;
+    const reqRatio = Math.min(Math.max((100 + reqTrend) / 100, 0), 1);
+
+    const errValue = stats.value?.error_rate?.value ?? 0;
+    const errRatio = Math.min(Math.max((100 - errValue) / 100, 0), 1);
+
+    animatedValues.value = {
+      key_count: keyCountRatio,
+      rpm: rpmRatio,
+      request_count: reqRatio,
+      error_rate: errRatio,
+    };
+  });
 };
 
 // 监听 stats 变化（含初始）
@@ -147,6 +160,7 @@ watch(
                 :type="stats?.request_count.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"
+                :style="{ color: 'var(--text-primary)' }"
               >
                 {{ stats ? formatTrend(stats.request_count.trend) : "--" }}
               </n-tag>
@@ -177,7 +191,7 @@ watch(
               <div class="stat-icon error-icon"><shield-check-icon /></div>
               <n-tag
                 v-if="stats?.error_rate?.trend !== undefined && stats.error_rate.trend !== 0"
-                :type="stats?.error_rate.trend_is_growth ? 'success' : 'error'"
+                :type="stats?.error_rate.trend_is_growth ? 'error' : 'success'"
                 size="small"
                 class="stat-trend"
               >
@@ -248,24 +262,27 @@ watch(
   align-items: center;
   justify-content: center;
   font-size: 1.4rem;
-  color: white;
   box-shadow: var(--shadow-md);
 }
 
 .key-icon {
   background: #3b82f6;
+  color: white;
 }
 
 .rpm-icon {
   background: #10b981;
+  color: white;
 }
 
 .request-icon {
   background: #f59e0b;
+  color: white;
 }
 
 .error-icon {
   background: #ef4444;
+  color: white;
 }
 
 .stat-trend {

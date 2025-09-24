@@ -22,7 +22,17 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 使用计算属性代替ref
 const stats = computed(() => props.stats);
-const animatedValues = ref<Record<string, number>>({});
+const animatedValues = ref<{
+  key_count: number;
+  rpm: number;
+  request_count: number;
+  error_rate: number;
+}>({
+  key_count: 0,
+  rpm: 0,
+  request_count: 0,
+  error_rate: 0,
+});
 
 // 格式化数值显示
 const formatValue = (value: number, type: "count" | "rate" = "count"): string => {
@@ -44,6 +54,13 @@ const formatTrend = (trend: number): string => {
 // 监听stats变化并更新动画值
 const updateAnimatedValues = () => {
   if (!stats.value) {
+    // Reset to avoid stale widths when data is absent
+    animatedValues.value = {
+      key_count: 0,
+      rpm: 0,
+      request_count: 0,
+      error_rate: 0,
+    };
     return;
   }
   nextTick(() => {
@@ -206,7 +223,7 @@ watch(
               <div class="stat-value">
                 {{
                   stats?.error_rate?.value != null
-                    ? formatValue(stats.error_rate.value, "rate")
+                    ? formatValue(Number(stats.error_rate.value), "rate")
                     : "--"
                 }}
               </div>
@@ -269,12 +286,12 @@ watch(
 }
 
 .key-icon {
-  background: #3b82f6;
+  background: var(--primary-color);
   color: white;
 }
 
 .rpm-icon {
-  background: #10b981;
+  background: var(--success-color);
   color: white;
 }
 
@@ -284,7 +301,7 @@ watch(
 }
 
 .error-icon {
-  background: #ef4444;
+  background: var(--error-color);
   color: white;
 }
 
@@ -327,11 +344,11 @@ watch(
 }
 
 .key-bar {
-  background: #3b82f6;
+  background: var(--primary-color);
 }
 
 .rpm-bar {
-  background: #10b981;
+  background: var(--success-color);
 }
 
 .request-bar {
@@ -339,7 +356,7 @@ watch(
 }
 
 .error-bar {
-  background: #ef4444;
+  background: var(--error-color);
 }
 
 @keyframes slideInUp {

@@ -160,11 +160,12 @@ function handleGroupCreated(group: Group) {
                   width="14"
                   xmlns="http://www.w3.org/2000/svg"
                   style="flex: 0 0 auto; line-height: 1"
+                  aria-hidden="true"
+                  focusable="false"
                 >
-                  <title>Gemini</title>
                   <defs>
                     <linearGradient
-                      id="lobe-icons-gemini-fill"
+                      :id="`gemini-fill-${group.id}`"
                       x1="0%"
                       x2="68.73%"
                       y1="100%"
@@ -177,7 +178,7 @@ function handleGroupCreated(group: Group) {
                   </defs>
                   <path
                     d="M12 24A14.304 14.304 0 000 12 14.304 14.304 0 0012 0a14.305 14.305 0 0012 12 14.305 14.305 0 00-12 12"
-                    fill="url(#lobe-icons-gemini-fill)"
+                    :fill="`url(#gemini-fill-${group.id})`"
                     fill-rule="nonzero"
                   />
                 </svg>

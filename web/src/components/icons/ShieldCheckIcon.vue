@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { withDefaults } from "vue";
+
 const props = withDefaults(defineProps<{ size?: number }>(), { size: 24 });
 </script>
 

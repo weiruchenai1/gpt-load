@@ -123,7 +123,7 @@ watch(
             <div class="stat-header">
               <div class="stat-icon rpm-icon"><clock-icon /></div>
               <n-tag
-                v-if="stats?.rpm && stats.rpm.trend !== undefined"
+                v-if="stats?.rpm && stats.rpm.trend != null"
                 :type="stats?.rpm.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"
@@ -156,11 +156,10 @@ watch(
             <div class="stat-header">
               <div class="stat-icon request-icon"><trending-up-icon /></div>
               <n-tag
-                v-if="stats?.request_count && stats.request_count.trend !== undefined"
+                v-if="stats?.request_count && stats.request_count.trend != null"
                 :type="stats?.request_count.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"
-                :style="{ color: 'var(--text-primary)' }"
               >
                 {{ stats ? formatTrend(stats.request_count.trend) : "--" }}
               </n-tag>
@@ -168,7 +167,11 @@ watch(
 
             <div class="stat-content">
               <div class="stat-value">
-                {{ stats?.request_count ? formatValue(stats.request_count.value) : "--" }}
+                {{
+                  stats?.request_count?.value != null
+                    ? formatValue(Number(stats.request_count.value))
+                    : "--"
+                }}
               </div>
               <div class="stat-title">{{ t("dashboard.requests24h") }}</div>
             </div>
@@ -190,7 +193,7 @@ watch(
             <div class="stat-header">
               <div class="stat-icon error-icon"><shield-check-icon /></div>
               <n-tag
-                v-if="stats?.error_rate?.trend !== undefined && stats.error_rate.trend !== 0"
+                v-if="stats?.error_rate?.trend != null && stats.error_rate.trend !== 0"
                 :type="stats?.error_rate.trend_is_growth ? 'error' : 'success'"
                 size="small"
                 class="stat-trend"

@@ -11,7 +11,11 @@ import ShieldCheckIcon from "./icons/ShieldCheckIcon.vue";
 const { t } = useI18n();
 
 // 工具函数：将数值限制在0-1之间
-const clamp01 = (n: number) => Math.min(Math.max(n, 0), 1);
+const clamp01 = (n: number) => {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return 0;
+  return Math.min(Math.max(x, 0), 1);
+};
 
 // Props
 interface Props {
@@ -72,13 +76,16 @@ const updateAnimatedValues = () => {
     const kcTotal = kcValue + kcSub;
     const keyCountRatio = kcTotal > 0 ? kcValue / kcTotal : 0;
 
-    const rpmTrend = stats.value?.rpm?.trend ?? 0;
+    const rpmTrendRaw = Number(stats.value?.rpm?.trend);
+    const rpmTrend = Number.isFinite(rpmTrendRaw) ? rpmTrendRaw : 0;
     const rpmRatio = clamp01((100 + rpmTrend) / 100);
 
-    const reqTrend = stats.value?.request_count?.trend ?? 0;
+    const reqTrendRaw = Number(stats.value?.request_count?.trend);
+    const reqTrend = Number.isFinite(reqTrendRaw) ? reqTrendRaw : 0;
     const reqRatio = clamp01((100 + reqTrend) / 100);
 
-    const errValue = stats.value?.error_rate?.value ?? 0;
+    const errValueRaw = Number(stats.value?.error_rate?.value);
+    const errValue = Number.isFinite(errValueRaw) ? errValueRaw : 0;
     const errRatio = clamp01((100 - errValue) / 100);
 
     animatedValues.value = {
@@ -109,7 +116,7 @@ watch(
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0s">
             <div class="stat-header">
               <div class="stat-icon key-icon" aria-hidden="true"><key-icon /></div>
-              <n-tooltip v-if="stats?.key_count?.sub_value" trigger="hover">
+              <n-tooltip v-if="Number(stats?.key_count?.sub_value) > 0" trigger="hover">
                 <template #trigger>
                   <n-tag type="error" size="small" class="stat-trend">
                     {{ stats?.key_count?.sub_value }}
@@ -143,7 +150,7 @@ watch(
             <div class="stat-header">
               <div class="stat-icon rpm-icon" aria-hidden="true"><clock-icon /></div>
               <n-tag
-                v-if="stats?.rpm && stats.rpm.trend != null"
+                v-if="stats?.rpm?.trend != null && stats.rpm.trend !== 0"
                 :type="stats?.rpm.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"
@@ -176,7 +183,7 @@ watch(
             <div class="stat-header">
               <div class="stat-icon request-icon" aria-hidden="true"><trending-up-icon /></div>
               <n-tag
-                v-if="stats?.request_count && stats.request_count.trend != null"
+                v-if="stats?.request_count?.trend != null && stats.request_count.trend !== 0"
                 :type="stats?.request_count.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"

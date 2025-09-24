@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type MenuOption } from "naive-ui";
-import { computed, h, watch } from "vue";
+import { computed, h, watch, type Component } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import DashboardIcon from "./icons/DashboardIcon.vue";
@@ -39,7 +39,7 @@ watch(activeMenu, () => {
   }
 });
 
-function renderMenuItem(key: string, label: string, IconComponent: any): MenuOption {
+function renderMenuItem(key: string, label: string, IconComponent: Component): MenuOption {
   return {
     label: () =>
       h(

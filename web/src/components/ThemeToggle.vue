@@ -43,7 +43,12 @@ const themeConfig = computed(() => {
 <template>
   <n-tooltip trigger="hover">
     <template #trigger>
-      <n-button quaternary circle @click="toggleTheme">
+      <n-button
+        quaternary
+        circle
+        @click="toggleTheme"
+        :aria-label="t('theme.clickToSwitch', { mode: themeConfig.nextMode })"
+      >
         <template #icon>
           <n-icon :component="themeConfig.icon" />
         </template>

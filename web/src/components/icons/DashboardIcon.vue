@@ -1,13 +1,28 @@
+<script setup lang="ts">
+const { size = 24 } = defineProps<{ size?: number }>();
+</script>
+
 <template>
   <svg
-    width="24"
-    height="24"
+    :width="size"
+    :height="size"
     viewBox="0 0 24 24"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    focusable="false"
   >
-    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
-    <path d="M21 9H3" stroke="currentColor" stroke-width="2"/>
-    <path d="M9 21V9" stroke="currentColor" stroke-width="2"/>
+    <rect
+      x="3"
+      y="3"
+      width="18"
+      height="18"
+      rx="2"
+      ry="2"
+      stroke="currentColor"
+      stroke-width="2"
+      fill="none"
+    />
+    <path d="M21 9H3" stroke="currentColor" stroke-width="2" />
+    <path d="M9 21V9" stroke="currentColor" stroke-width="2" />
   </svg>
 </template>

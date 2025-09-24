@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DashboardStatsResponse } from "@/types/models";
 import { NCard, NGrid, NGridItem, NSpace, NTag, NTooltip } from "naive-ui";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import KeyIcon from "./icons/KeyIcon.vue";
 import ClockIcon from "./icons/ClockIcon.vue";
@@ -57,10 +57,14 @@ const updateAnimatedValues = () => {
   }
 };
 
-// 监听stats变化
-onMounted(() => {
-  updateAnimatedValues();
-});
+// 监听 stats 变化（含初始）
+watch(
+  stats,
+  () => {
+    updateAnimatedValues();
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -71,8 +75,8 @@ onMounted(() => {
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0s">
             <div class="stat-header">
-              <div class="stat-icon key-icon"><KeyIcon /></div>
-              <n-tooltip v-if="stats?.key_count.sub_value" trigger="hover">
+              <div class="stat-icon key-icon"><key-icon /></div>
+              <n-tooltip v-if="stats?.key_count?.sub_value" trigger="hover">
                 <template #trigger>
                   <n-tag type="error" size="small" class="stat-trend">
                     {{ stats.key_count.sub_value }}
@@ -104,7 +108,7 @@ onMounted(() => {
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0.05s">
             <div class="stat-header">
-              <div class="stat-icon rpm-icon"><ClockIcon /></div>
+              <div class="stat-icon rpm-icon"><clock-icon /></div>
               <n-tag
                 v-if="stats?.rpm && stats.rpm.trend !== undefined"
                 :type="stats?.rpm.trend_is_growth ? 'success' : 'error'"
@@ -117,7 +121,7 @@ onMounted(() => {
 
             <div class="stat-content">
               <div class="stat-value">
-                {{ stats?.rpm?.value.toFixed(1) ?? 0 }}
+                {{ stats?.rpm?.value != null ? Number(stats.rpm.value).toFixed(1) : "0.0" }}
               </div>
               <div class="stat-title">{{ t("dashboard.rpm10Min") }}</div>
             </div>
@@ -137,7 +141,7 @@ onMounted(() => {
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0.1s">
             <div class="stat-header">
-              <div class="stat-icon request-icon"><TrendingUpIcon /></div>
+              <div class="stat-icon request-icon"><trending-up-icon /></div>
               <n-tag
                 v-if="stats?.request_count && stats.request_count.trend !== undefined"
                 :type="stats?.request_count.trend_is_growth ? 'success' : 'error'"
@@ -150,7 +154,7 @@ onMounted(() => {
 
             <div class="stat-content">
               <div class="stat-value">
-                {{ stats ? formatValue(stats.request_count.value) : "--" }}
+                {{ stats?.request_count ? formatValue(stats.request_count.value) : "--" }}
               </div>
               <div class="stat-title">{{ t("dashboard.requests24h") }}</div>
             </div>
@@ -170,20 +174,24 @@ onMounted(() => {
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0.15s">
             <div class="stat-header">
-              <div class="stat-icon error-icon"><ShieldCheckIcon /></div>
+              <div class="stat-icon error-icon"><shield-check-icon /></div>
               <n-tag
-                v-if="stats?.error_rate.trend !== 0"
+                v-if="stats?.error_rate?.trend !== undefined && stats.error_rate.trend !== 0"
                 :type="stats?.error_rate.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"
               >
-                {{ stats ? formatTrend(stats.error_rate.trend) : "--" }}
+                {{ stats?.error_rate ? formatTrend(stats.error_rate.trend) : "--" }}
               </n-tag>
             </div>
 
             <div class="stat-content">
               <div class="stat-value">
-                {{ stats ? formatValue(stats.error_rate.value ?? 0, "rate") : "--" }}
+                {{
+                  stats?.error_rate?.value != null
+                    ? formatValue(stats.error_rate.value, "rate")
+                    : "--"
+                }}
               </div>
               <div class="stat-title">{{ t("dashboard.errorRate24h") }}</div>
             </div>
@@ -262,15 +270,6 @@ onMounted(() => {
 
 .stat-trend {
   font-weight: 600;
-}
-
-.stat-trend:before {
-  content: "";
-  display: inline-block;
-  width: 0;
-  height: 0;
-  margin-right: 4px;
-  vertical-align: middle;
 }
 
 .stat-content {

@@ -92,10 +92,10 @@ watch(
               <n-tooltip v-if="stats?.key_count?.sub_value" trigger="hover">
                 <template #trigger>
                   <n-tag type="error" size="small" class="stat-trend">
-                    {{ stats.key_count.sub_value }}
+                    {{ stats?.key_count?.sub_value }}
                   </n-tag>
                 </template>
-                {{ stats.key_count.sub_value_tip }}
+                {{ stats?.key_count?.sub_value_tip }}
               </n-tooltip>
             </div>
 
@@ -327,19 +327,19 @@ watch(
 }
 
 .key-bar {
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: #3b82f6;
 }
 
 .rpm-bar {
-  background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+  background: #10b981;
 }
 
 .request-bar {
-  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+  background: #f59e0b;
 }
 
 .error-bar {
-  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  background: #ef4444;
 }
 
 @keyframes slideInUp {

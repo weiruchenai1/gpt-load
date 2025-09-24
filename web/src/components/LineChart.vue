@@ -571,18 +571,19 @@ onMounted(() => {
   border: 1px solid var(--border-color-light);
 }
 
-/* 浅色主题 - 保持原有的紫色渐变设计 */
+/* 浅色主题 - 改为简约白色背景 */
 :root:not(.dark) .chart-container {
-  background: var(--primary-gradient);
-  color: white;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color-light);
 }
 
-/* 暗黑主题 - 使用深蓝紫渐变外层背景 */
+/* 暗黑主题 - 改为简约暗色背景 */
 :root.dark .chart-container {
-  background: linear-gradient(135deg, #525a7a 0%, #424964 100%);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color-light);
   box-shadow: var(--shadow-md);
-  border: 1px solid rgba(139, 157, 245, 0.2);
-  color: #e8e8e8;
 }
 
 .chart-header {

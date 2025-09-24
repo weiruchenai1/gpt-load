@@ -3,6 +3,10 @@ import type { DashboardStatsResponse } from "@/types/models";
 import { NCard, NGrid, NGridItem, NSpace, NTag, NTooltip } from "naive-ui";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import KeyIcon from "./icons/KeyIcon.vue";
+import ClockIcon from "./icons/ClockIcon.vue";
+import TrendingUpIcon from "./icons/TrendingUpIcon.vue";
+import ShieldCheckIcon from "./icons/ShieldCheckIcon.vue";
 
 const { t } = useI18n();
 
@@ -67,7 +71,7 @@ onMounted(() => {
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0s">
             <div class="stat-header">
-              <div class="stat-icon key-icon">🔑</div>
+              <div class="stat-icon key-icon"><KeyIcon /></div>
               <n-tooltip v-if="stats?.key_count.sub_value" trigger="hover">
                 <template #trigger>
                   <n-tag type="error" size="small" class="stat-trend">
@@ -100,7 +104,7 @@ onMounted(() => {
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0.05s">
             <div class="stat-header">
-              <div class="stat-icon rpm-icon">⏱️</div>
+              <div class="stat-icon rpm-icon"><ClockIcon /></div>
               <n-tag
                 v-if="stats?.rpm && stats.rpm.trend !== undefined"
                 :type="stats?.rpm.trend_is_growth ? 'success' : 'error'"
@@ -133,7 +137,7 @@ onMounted(() => {
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0.1s">
             <div class="stat-header">
-              <div class="stat-icon request-icon">📈</div>
+              <div class="stat-icon request-icon"><TrendingUpIcon /></div>
               <n-tag
                 v-if="stats?.request_count && stats.request_count.trend !== undefined"
                 :type="stats?.request_count.trend_is_growth ? 'success' : 'error'"
@@ -166,7 +170,7 @@ onMounted(() => {
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0.15s">
             <div class="stat-header">
-              <div class="stat-icon error-icon">🛡️</div>
+              <div class="stat-icon error-icon"><ShieldCheckIcon /></div>
               <n-tag
                 v-if="stats?.error_rate.trend !== 0"
                 :type="stats?.error_rate.trend_is_growth ? 'success' : 'error'"
@@ -241,19 +245,19 @@ onMounted(() => {
 }
 
 .key-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #3b82f6;
 }
 
 .rpm-icon {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #10b981;
 }
 
 .request-icon {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #f59e0b;
 }
 
 .error-icon {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: #ef4444;
 }
 
 .stat-trend {

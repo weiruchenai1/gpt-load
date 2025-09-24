@@ -10,6 +10,9 @@ import ShieldCheckIcon from "./icons/ShieldCheckIcon.vue";
 
 const { t } = useI18n();
 
+// 工具函数：将数值限制在0-1之间
+const clamp01 = (n: number) => Math.min(Math.max(n, 0), 1);
+
 // Props
 interface Props {
   stats: DashboardStatsResponse | null;
@@ -70,13 +73,13 @@ const updateAnimatedValues = () => {
     const keyCountRatio = kcTotal > 0 ? kcValue / kcTotal : 0;
 
     const rpmTrend = stats.value?.rpm?.trend ?? 0;
-    const rpmRatio = Math.min(Math.max((100 + rpmTrend) / 100, 0), 1);
+    const rpmRatio = clamp01((100 + rpmTrend) / 100);
 
     const reqTrend = stats.value?.request_count?.trend ?? 0;
-    const reqRatio = Math.min(Math.max((100 + reqTrend) / 100, 0), 1);
+    const reqRatio = clamp01((100 + reqTrend) / 100);
 
     const errValue = stats.value?.error_rate?.value ?? 0;
-    const errRatio = Math.min(Math.max((100 - errValue) / 100, 0), 1);
+    const errRatio = clamp01((100 - errValue) / 100);
 
     animatedValues.value = {
       key_count: keyCountRatio,
@@ -89,11 +92,11 @@ const updateAnimatedValues = () => {
 
 // 监听 stats 变化（含初始）
 watch(
-  stats,
+  () => props.stats,
   () => {
     updateAnimatedValues();
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 );
 </script>
 
@@ -105,7 +108,7 @@ watch(
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0s">
             <div class="stat-header">
-              <div class="stat-icon key-icon"><key-icon /></div>
+              <div class="stat-icon key-icon" aria-hidden="true"><key-icon /></div>
               <n-tooltip v-if="stats?.key_count?.sub_value" trigger="hover">
                 <template #trigger>
                   <n-tag type="error" size="small" class="stat-trend">
@@ -118,7 +121,7 @@ watch(
 
             <div class="stat-content">
               <div class="stat-value">
-                {{ stats?.key_count?.value ?? 0 }}
+                {{ formatValue(Number(stats?.key_count?.value ?? 0)) }}
               </div>
               <div class="stat-title">{{ t("dashboard.totalKeys") }}</div>
             </div>
@@ -138,7 +141,7 @@ watch(
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0.05s">
             <div class="stat-header">
-              <div class="stat-icon rpm-icon"><clock-icon /></div>
+              <div class="stat-icon rpm-icon" aria-hidden="true"><clock-icon /></div>
               <n-tag
                 v-if="stats?.rpm && stats.rpm.trend != null"
                 :type="stats?.rpm.trend_is_growth ? 'success' : 'error'"
@@ -171,7 +174,7 @@ watch(
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0.1s">
             <div class="stat-header">
-              <div class="stat-icon request-icon"><trending-up-icon /></div>
+              <div class="stat-icon request-icon" aria-hidden="true"><trending-up-icon /></div>
               <n-tag
                 v-if="stats?.request_count && stats.request_count.trend != null"
                 :type="stats?.request_count.trend_is_growth ? 'success' : 'error'"
@@ -208,7 +211,7 @@ watch(
         <n-grid-item span="1">
           <n-card :bordered="false" class="stat-card" style="animation-delay: 0.15s">
             <div class="stat-header">
-              <div class="stat-icon error-icon"><shield-check-icon /></div>
+              <div class="stat-icon error-icon" aria-hidden="true"><shield-check-icon /></div>
               <n-tag
                 v-if="stats?.error_rate?.trend != null && stats.error_rate.trend !== 0"
                 :type="stats?.error_rate.trend_is_growth ? 'error' : 'success'"
@@ -296,7 +299,7 @@ watch(
 }
 
 .request-icon {
-  background: #f59e0b;
+  background: var(--warning-color, #f59e0b);
   color: white;
 }
 
@@ -352,7 +355,7 @@ watch(
 }
 
 .request-bar {
-  background: #f59e0b;
+  background: var(--warning-color, #f59e0b);
 }
 
 .error-bar {

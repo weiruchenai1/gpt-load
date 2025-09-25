@@ -96,7 +96,8 @@ export function useDataFormat() {
     const num = safeNumber(value);
     
     if (type === "rate") {
-      return `${num.toFixed(1)}%`;
+      const percent = num <= 1 ? num * 100 : num;
+      return `${percent.toFixed(1)}%`;
     }
     
     // 使用 Intl.NumberFormat 进行本地化的紧凑格式化

@@ -174,7 +174,11 @@ debouncedWatch(
             class="stat-card" 
             style="animation-delay: 0.05s"
             role="region"
-            :aria-label="`RPM 统计：${stats?.rpm?.value != null ? safeNumber(stats.rpm.value).toFixed(1) : '0.0'} 请求每分钟`"
+            :aria-label="`RPM 统计：${
+              isValidNumber(stats?.rpm?.value)
+                ? safeNumber(stats?.rpm?.value).toFixed(1)
+                : '--'
+            } 请求每分钟`"
           >
             <div class="stat-header">
               <div 
@@ -197,9 +201,17 @@ debouncedWatch(
             <div class="stat-content">
               <div 
                 class="stat-value"
-                :aria-label="`每分钟请求数：${stats?.rpm?.value != null ? safeNumber(stats.rpm.value).toFixed(1) : '0.0'}`"
+                :aria-label="`每分钟请求数：${
+                  isValidNumber(stats?.rpm?.value)
+                    ? safeNumber(stats?.rpm?.value).toFixed(1)
+                    : '--'
+                }`"
               >
-                {{ stats?.rpm?.value != null ? safeNumber(stats.rpm.value).toFixed(1) : "0.0" }}
+                {{
+                  isValidNumber(stats?.rpm?.value)
+                    ? safeNumber(stats?.rpm?.value).toFixed(1)
+                    : "--"
+                }}
               </div>
               <div class="stat-title">{{ t("dashboard.rpm10Min") }}</div>
             </div>

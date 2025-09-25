@@ -162,6 +162,8 @@ export function useErrorHandling() {
       jitter = true,
     } = options;
     
+    // 重置重试计数
+    errorState.retryCount = 0;
     let lastError: any;
 
     for (let i = 0; i <= maxRetries; i++) {

@@ -29,7 +29,7 @@ import GroupCopyModal from "./GroupCopyModal.vue";
 import GroupFormModal from "./GroupFormModal.vue";
 
 const { t } = useI18n();
-const { formatValue, safeNumber } = useDataFormat();
+const { formatValue, safeNumber, isValidNumber } = useDataFormat();
 
 interface Props {
   group: Group | null;

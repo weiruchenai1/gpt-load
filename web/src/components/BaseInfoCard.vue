@@ -4,6 +4,7 @@ import { NCard, NGrid, NGridItem, NSpace, NTag, NTooltip } from "naive-ui";
 import { computed, ref, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDataFormat } from "@/composables/useDataFormat";
+import { usePerformance } from "@/composables/usePerformance";
 import KeyIcon from "./icons/KeyIcon.vue";
 import ClockIcon from "./icons/ClockIcon.vue";
 import TrendingUpIcon from "./icons/TrendingUpIcon.vue";
@@ -17,8 +18,10 @@ const {
   formatTrend, 
   safeRatio,
   trendToRatio,
-  errorRateToRatio 
+  errorRateToRatio,
+  isValidNumber 
 } = useDataFormat();
+const { debouncedWatch, optimizedUpdate } = usePerformance();
 
 // Props
 interface Props {
@@ -56,7 +59,9 @@ const updateAnimatedValues = () => {
     };
     return;
   }
-  nextTick(() => {
+  
+  // 使用优化的更新策略
+  optimizedUpdate(() => {
     // 计算 key_count 比率
     const kcValue = safeNumber(stats.value?.key_count?.value);
     const kcSub = safeNumber(stats.value?.key_count?.sub_value);
@@ -73,31 +78,61 @@ const updateAnimatedValues = () => {
       request_count: reqRatio,
       error_rate: errRatio,
     };
-  });
+  }, "normal");
 };
 
-// 监听 stats 变化（含初始）
-watch(
+// 使用防抖监听 stats 变化（含初始）
+debouncedWatch(
   () => props.stats,
   () => {
     updateAnimatedValues();
   },
+  150, // 150ms 防抖延迟
   { immediate: true, deep: true }
 );
 </script>
 
 <template>
-  <div class="stats-container">
+  <div 
+    class="stats-container"
+    role="region"
+    aria-label="仪表盘统计数据"
+  >
     <n-space vertical size="medium">
-      <n-grid cols="2 s:4" :x-gap="20" :y-gap="20" responsive="screen">
+      <n-grid 
+        cols="2 s:4" 
+        :x-gap="20" 
+        :y-gap="20" 
+        responsive="screen"
+        role="grid"
+        aria-label="统计卡片网格"
+      >
         <!-- 密钥数量 -->
         <n-grid-item span="1">
-          <n-card :bordered="false" class="stat-card" style="animation-delay: 0s">
+          <n-card 
+            :bordered="false" 
+            class="stat-card" 
+            style="animation-delay: 0s"
+            role="region"
+            :aria-label="`密钥统计：${formatValue(stats?.key_count?.value)} 个密钥`"
+          >
             <div class="stat-header">
-              <div class="stat-icon key-icon" aria-hidden="true"><key-icon /></div>
+              <div 
+                class="stat-icon key-icon" 
+                aria-hidden="true"
+                role="img"
+                aria-label="密钥图标"
+              >
+                <key-icon />
+              </div>
               <n-tooltip v-if="Number(stats?.key_count?.sub_value) > 0" trigger="hover">
                 <template #trigger>
-                  <n-tag type="error" size="small" class="stat-trend">
+                  <n-tag 
+                    type="error" 
+                    size="small" 
+                    class="stat-trend"
+                    :aria-label="`异常密钥：${stats?.key_count?.sub_value} 个`"
+                  >
                     {{ stats?.key_count?.sub_value }}
                   </n-tag>
                 </template>
@@ -106,13 +141,23 @@ watch(
             </div>
 
             <div class="stat-content">
-              <div class="stat-value">
+              <div 
+                class="stat-value"
+                :aria-label="`密钥总数：${formatValue(stats?.key_count?.value)}`"
+              >
                 {{ formatValue(stats?.key_count?.value) }}
               </div>
               <div class="stat-title">{{ t("dashboard.totalKeys") }}</div>
             </div>
 
-            <div class="stat-bar">
+            <div 
+              class="stat-bar"
+              role="progressbar"
+              :aria-valuenow="Math.round((animatedValues.key_count ?? 0) * 100)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              :aria-label="`密钥使用比例：${Math.round((animatedValues.key_count ?? 0) * 100)}%`"
+            >
               <div
                 class="stat-bar-fill key-bar"
                 :style="{
@@ -125,27 +170,51 @@ watch(
 
         <!-- RPM (10分钟) -->
         <n-grid-item span="1">
-          <n-card :bordered="false" class="stat-card" style="animation-delay: 0.05s">
+          <n-card 
+            :bordered="false" 
+            class="stat-card" 
+            style="animation-delay: 0.05s"
+            role="region"
+            :aria-label="`RPM 统计：${stats?.rpm?.value != null ? safeNumber(stats.rpm.value).toFixed(1) : '0.0'} 请求每分钟`"
+          >
             <div class="stat-header">
-              <div class="stat-icon rpm-icon" aria-hidden="true"><clock-icon /></div>
+              <div 
+                class="stat-icon rpm-icon" 
+                aria-hidden="true"
+                role="img"
+                aria-label="时钟图标"
+              >
+                <clock-icon />
+              </div>
               <n-tag
                 v-if="stats?.rpm?.trend != null && stats.rpm.trend !== 0"
                 :type="stats?.rpm.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"
+                :aria-label="`趋势：${formatTrend(stats.rpm.trend)}`"
               >
                 {{ formatTrend(stats.rpm.trend) }}
               </n-tag>
             </div>
 
             <div class="stat-content">
-              <div class="stat-value">
+              <div 
+                class="stat-value"
+                :aria-label="`每分钟请求数：${stats?.rpm?.value != null ? safeNumber(stats.rpm.value).toFixed(1) : '0.0'}`"
+              >
                 {{ stats?.rpm?.value != null ? safeNumber(stats.rpm.value).toFixed(1) : "0.0" }}
               </div>
               <div class="stat-title">{{ t("dashboard.rpm10Min") }}</div>
             </div>
 
-            <div class="stat-bar">
+            <div 
+              class="stat-bar"
+              role="progressbar"
+              :aria-valuenow="Math.round((animatedValues.rpm ?? 0) * 100)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              :aria-label="`RPM 趋势指示：${Math.round((animatedValues.rpm ?? 0) * 100)}%`"
+            >
               <div
                 class="stat-bar-fill rpm-bar"
                 :style="{

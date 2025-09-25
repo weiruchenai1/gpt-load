@@ -8,7 +8,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
-const { formatValue } = useDataFormat();
+const { formatValue, isValidNumber } = useDataFormat();
 
 // 图表数据
 const chartData = ref<ChartData | null>(null);

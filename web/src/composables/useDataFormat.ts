@@ -1,17 +1,31 @@
 /**
- * 数据格式化相关的通用工具函数
+ * 数据格式化和验证相关的通用工具函数
  */
 export function useDataFormat() {
   /**
-   * 安全地将值转换为数字，处理 null/undefined 情况
+   * 安全地将值转换为数字，处理 null/undefined/string 情况
    * @param value 要转换的值
    * @param fallback 当值无效时的默认值
    * @returns 转换后的数字
    */
   const safeNumber = (value: unknown, fallback = 0): number => {
-    if (value == null) return fallback;
-    const num = Number(value);
-    return Number.isFinite(num) ? num : fallback;
+    if (value == null || value === "") return fallback;
+    
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : fallback;
+    }
+    
+    if (typeof value === "string") {
+      // 处理特殊字符串值
+      if (value === "--" || value === "N/A" || value.trim() === "") {
+        return fallback;
+      }
+      
+      const num = Number(value);
+      return Number.isFinite(num) ? num : fallback;
+    }
+    
+    return fallback;
   };
 
   /**
@@ -20,9 +34,37 @@ export function useDataFormat() {
    * @returns 转换后的数字或 null
    */
   const safeNumberOrNull = (value: unknown): number | null => {
-    if (value == null) return null;
-    const num = Number(value);
-    return Number.isFinite(num) ? num : null;
+    if (value == null || value === "" || value === "--" || value === "N/A") {
+      return null;
+    }
+    
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : null;
+    }
+    
+    if (typeof value === "string") {
+      if (value.trim() === "") return null;
+      const num = Number(value);
+      return Number.isFinite(num) ? num : null;
+    }
+    
+    return null;
+  };
+
+  /**
+   * 检查值是否为有效的数值数据
+   * @param value 要检查的值
+   * @returns 是否为有效数值
+   */
+  const isValidNumber = (value: unknown): boolean => {
+    if (value == null) return false;
+    if (typeof value === "number") return Number.isFinite(value);
+    if (typeof value === "string") {
+      if (value === "--" || value === "N/A" || value.trim() === "") return false;
+      const num = Number(value);
+      return Number.isFinite(num);
+    }
+    return false;
   };
 
   /**
@@ -39,9 +81,18 @@ export function useDataFormat() {
    * 格式化数值显示
    * @param value 要格式化的值
    * @param type 数值类型：count（数量）或 rate（百分比）
+   * @param defaultText 当数值无效时显示的文本
    * @returns 格式化后的字符串
    */
-  const formatValue = (value: unknown, type: "count" | "rate" = "count"): string => {
+  const formatValue = (
+    value: unknown, 
+    type: "count" | "rate" = "count",
+    defaultText = "--"
+  ): string => {
+    if (!isValidNumber(value)) {
+      return defaultText;
+    }
+    
     const num = safeNumber(value);
     
     if (type === "rate") {
@@ -62,9 +113,14 @@ export function useDataFormat() {
   /**
    * 格式化趋势显示
    * @param trend 趋势数值
+   * @param defaultText 当数值无效时显示的文本
    * @returns 格式化后的趋势字符串（带符号）
    */
-  const formatTrend = (trend: unknown): string => {
+  const formatTrend = (trend: unknown, defaultText = "--"): string => {
+    if (!isValidNumber(trend)) {
+      return defaultText;
+    }
+    
     const num = safeNumber(trend);
     const sign = num >= 0 ? "+" : "";
     return `${sign}${num.toFixed(1)}%`;
@@ -110,6 +166,7 @@ export function useDataFormat() {
   return {
     safeNumber,
     safeNumberOrNull,
+    isValidNumber,
     clamp01,
     formatValue,
     formatTrend,

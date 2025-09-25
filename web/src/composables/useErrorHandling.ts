@@ -1,0 +1,236 @@
+import { reactive } from "vue";
+import { useMessage } from "naive-ui";
+
+/**
+ * 错误处理状态
+ */
+interface ErrorState {
+  hasError: boolean;
+  message: string;
+  type: "network" | "data" | "permission" | "unknown";
+  timestamp: Date;
+  retryCount: number;
+}
+
+/**
+ * 错误处理相关的工具函数
+ */
+export function useErrorHandling() {
+  const message = useMessage();
+  const errorState = reactive<ErrorState>({
+    hasError: false,
+    message: "",
+    type: "unknown",
+    timestamp: new Date(),
+    retryCount: 0,
+  });
+
+  /**
+   * 设置错误状态
+   * @param error 错误对象或消息
+   * @param type 错误类型
+   */
+  const setError = (
+    error: Error | string,
+    type: ErrorState["type"] = "unknown"
+  ) => {
+    errorState.hasError = true;
+    errorState.message = typeof error === "string" ? error : error.message;
+    errorState.type = type;
+    errorState.timestamp = new Date();
+  };
+
+  /**
+   * 清除错误状态
+   */
+  const clearError = () => {
+    errorState.hasError = false;
+    errorState.message = "";
+    errorState.retryCount = 0;
+  };
+
+  /**
+   * 增加重试次数
+   */
+  const incrementRetry = () => {
+    errorState.retryCount++;
+  };
+
+  /**
+   * 错误类型判断
+   */
+  const isNetworkError = (error: any): boolean => {
+    if (!error) return false;
+    
+    // 常见网络错误检查
+    return (
+      error.code === "NETWORK_ERROR" ||
+      error.message?.includes("Network Error") ||
+      error.message?.includes("fetch") ||
+      !navigator.onLine
+    );
+  };
+
+  const isPermissionError = (error: any): boolean => {
+    if (!error) return false;
+    
+    const status = error.response?.status || error.status;
+    return status === 401 || status === 403;
+  };
+
+  const isDataError = (error: any): boolean => {
+    if (!error) return false;
+    
+    const status = error.response?.status || error.status;
+    return status >= 400 && status < 500 && status !== 401 && status !== 403;
+  };
+
+  /**
+   * 统一的错误处理函数
+   * @param error 错误对象
+   * @param options 处理选项
+   */
+  const handleError = (
+    error: any,
+    options: {
+      showMessage?: boolean;
+      logError?: boolean;
+      retryable?: boolean;
+      fallbackMessage?: string;
+    } = {}
+  ) => {
+    const {
+      showMessage = true,
+      logError = true,
+      retryable = false,
+      fallbackMessage = "操作失败，请稍后重试",
+    } = options;
+
+    if (logError) {
+      console.error("Error handled:", error);
+    }
+
+    let errorType: ErrorState["type"] = "unknown";
+    let userMessage = fallbackMessage;
+
+    if (isNetworkError(error)) {
+      errorType = "network";
+      userMessage = "网络连接失败，请检查网络连接";
+    } else if (isPermissionError(error)) {
+      errorType = "permission";
+      userMessage = "权限不足或登录已过期";
+    } else if (isDataError(error)) {
+      errorType = "data";
+      userMessage = error.response?.data?.message || "数据请求失败";
+    }
+
+    setError(userMessage, errorType);
+
+    if (showMessage) {
+      message.error(userMessage);
+    }
+
+    return {
+      type: errorType,
+      message: userMessage,
+      retryable,
+    };
+  };
+
+  /**
+   * 带重试机制的异步操作包装器
+   * @param fn 异步函数
+   * @param maxRetries 最大重试次数
+   * @param retryDelay 重试延迟（毫秒）
+   */
+  const withRetry = async <T>(
+    fn: () => Promise<T>,
+    maxRetries = 2,
+    retryDelay = 1000
+  ): Promise<T> => {
+    let lastError: any;
+
+    for (let i = 0; i <= maxRetries; i++) {
+      try {
+        const result = await fn();
+        if (i > 0) {
+          // 重试成功，清除错误状态
+          clearError();
+        }
+        return result;
+      } catch (error) {
+        lastError = error;
+        
+        if (i < maxRetries) {
+          incrementRetry();
+          
+          // 只对网络错误进行重试
+          if (isNetworkError(error)) {
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          }
+        }
+        
+        break;
+      }
+    }
+
+    handleError(lastError, { retryable: maxRetries > 0 });
+    throw lastError;
+  };
+
+  /**
+   * 安全的异步操作包装器（不抛出异常）
+   * @param fn 异步函数
+   * @param fallback 失败时的默认值
+   */
+  const safeAsync = async <T>(
+    fn: () => Promise<T>,
+    fallback: T
+  ): Promise<T> => {
+    try {
+      return await fn();
+    } catch (error) {
+      handleError(error, { showMessage: false });
+      return fallback;
+    }
+  };
+
+  /**
+   * 获取用户友好的错误消息
+   * @param error 错误对象
+   */
+  const getFriendlyErrorMessage = (error: any): string => {
+    if (isNetworkError(error)) {
+      return "网络连接失败，请检查网络连接后重试";
+    }
+    
+    if (isPermissionError(error)) {
+      return "权限不足或登录已过期，请重新登录";
+    }
+    
+    if (error?.response?.data?.message) {
+      return error.response.data.message;
+    }
+    
+    if (error?.message) {
+      return error.message;
+    }
+    
+    return "操作失败，请稍后重试";
+  };
+
+  return {
+    errorState,
+    setError,
+    clearError,
+    incrementRetry,
+    handleError,
+    withRetry,
+    safeAsync,
+    getFriendlyErrorMessage,
+    isNetworkError,
+    isPermissionError,
+    isDataError,
+  };
+}

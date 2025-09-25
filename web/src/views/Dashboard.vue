@@ -7,14 +7,18 @@ import SecurityAlert from "@/components/SecurityAlert.vue";
 import type { DashboardStatsResponse } from "@/types/models";
 import { useErrorHandling } from "@/composables/useErrorHandling";
 import { usePerformance } from "@/composables/usePerformance";
-import { NSpace, NSpin, NAlert, NButton } from "naive-ui";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
+// Return translation or fallback if missing
+const tt = (key: string, fallback: string): string => {
+  const s = t(key) as unknown as string;
+  return s && s !== key ? s : fallback;
+};
 
 const dashboardStats = ref<DashboardStatsResponse | null>(null);
-const { withRetry, handleError, errorState, clearError } = useErrorHandling();
+const { withRetry, errorState, clearError } = useErrorHandling();
 const { useLoadingState } = usePerformance();
 const { isLoading, startLoading, stopLoading } = useLoadingState();
 
@@ -52,14 +56,16 @@ onMounted(() => {
       <n-alert
         v-if="errorState.hasError"
         type="error"
-        :title="errorState.type === 'network' ? t('error.networkConnectionFailed', '网络连接失败') : t('error.dataLoadingFailed', '数据加载失败')"
+        :title="errorState.type === 'network'
+          ? tt('error.networkConnectionFailed', '网络连接失败')
+          : tt('error.dataLoadingFailed', '数据加载失败')"
         closable
         @close="clearError"
       >
         {{ errorState.message }}
         <template #action>
           <n-button size="small" @click="retryLoad" :loading="isLoading">
-            {{ t('common.retry', '重试') }}
+            {{ tt('common.retry', '重试') }}
           </n-button>
         </template>
       </n-alert>

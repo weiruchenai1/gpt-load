@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DashboardStatsResponse } from "@/types/models";
 import { NCard, NGrid, NGridItem, NSpace, NTag, NTooltip } from "naive-ui";
-import { computed, ref, watch, nextTick } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDataFormat } from "@/composables/useDataFormat";
 import { usePerformance } from "@/composables/usePerformance";
@@ -16,7 +16,6 @@ const {
   safeNumberOrNull, 
   formatValue, 
   formatTrend, 
-  formatPercentage,
   safeRatio,
   trendToRatio,
   errorRateToRatio,

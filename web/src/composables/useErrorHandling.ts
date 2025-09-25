@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-import { useMessage } from "naive-ui";
+import { useMessage, createDiscreteApi } from "naive-ui";
 import { useI18n } from "vue-i18n";
 
 /**
@@ -17,8 +17,15 @@ interface ErrorState {
  * 错误处理相关的工具函数
  */
 export function useErrorHandling() {
-  const message = useMessage();
+  const injected = (() => { try { return useMessage(); } catch { return null; } })();
+  const { message: discreteMessage } = createDiscreteApi(["message"]);
+  const message = injected ?? discreteMessage;
   const { t } = useI18n();
+  // Return translation or fallback if missing
+  const tt = (key: string, fallback: string): string => {
+    const s = t(key) as unknown as string;
+    return s && s !== key ? s : fallback;
+  };
   const errorState = reactive<ErrorState>({
     hasError: false,
     message: "",
@@ -107,7 +114,7 @@ export function useErrorHandling() {
       showMessage = true,
       logError = true,
       retryable = false,
-      fallbackMessage = t("error.generic", "操作失败，请稍后重试"),
+      fallbackMessage = tt("error.generic", "操作失败，请稍后重试"),
     } = options;
 
     if (logError) {
@@ -119,13 +126,13 @@ export function useErrorHandling() {
 
     if (isNetworkError(error)) {
       errorType = "network";
-      userMessage = t("error.network", "网络连接失败，请检查网络连接");
+      userMessage = tt("error.network", "网络连接失败，请检查网络连接");
     } else if (isPermissionError(error)) {
       errorType = "permission";
-      userMessage = t("error.permission", "权限不足或登录已过期");
+      userMessage = tt("error.permission", "权限不足或登录已过期");
     } else if (isDataError(error)) {
       errorType = "data";
-      userMessage = error.response?.data?.message || t("error.data", "数据请求失败");
+      userMessage = error.response?.data?.message || tt("error.data", "数据请求失败");
     }
 
     setError(userMessage, errorType);
@@ -221,11 +228,11 @@ export function useErrorHandling() {
    */
   const getFriendlyErrorMessage = (error: any): string => {
     if (isNetworkError(error)) {
-      return t("error.networkRetry", "网络连接失败，请检查网络连接后重试");
+      return tt("error.networkRetry", "网络连接失败，请检查网络连接后重试");
     }
     
     if (isPermissionError(error)) {
-      return t("error.permissionReauth", "权限不足或登录已过期，请重新登录");
+      return tt("error.permissionReauth", "权限不足或登录已过期，请重新登录");
     }
     
     if (error?.response?.data?.message) {
@@ -236,7 +243,7 @@ export function useErrorHandling() {
       return error.message;
     }
     
-    return t("error.generic", "操作失败，请稍后重试");
+    return tt("error.generic", "操作失败，请稍后重试");
   };
 
   return {

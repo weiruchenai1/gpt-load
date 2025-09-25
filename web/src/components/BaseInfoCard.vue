@@ -79,7 +79,7 @@ const updateAnimatedValues = () => {
       request_count: reqRatio,
       error_rate: errRatio,
     };
-  }, "normal");
+  }, "high");
 };
 
 // 使用防抖监听 stats 变化（含初始）
@@ -121,8 +121,6 @@ debouncedWatch(
               <div 
                 class="stat-icon key-icon" 
                 aria-hidden="true"
-                role="img"
-                aria-label="密钥图标"
               >
                 <key-icon />
               </div>
@@ -182,8 +180,6 @@ debouncedWatch(
               <div 
                 class="stat-icon rpm-icon" 
                 aria-hidden="true"
-                role="img"
-                aria-label="时钟图标"
               >
                 <clock-icon />
               </div>
@@ -296,7 +292,7 @@ debouncedWatch(
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 @import "@/styles/components.scss";
 
 .stats-container {

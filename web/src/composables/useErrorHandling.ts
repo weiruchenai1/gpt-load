@@ -47,6 +47,8 @@ export function useErrorHandling() {
     errorState.hasError = false;
     errorState.message = "";
     errorState.retryCount = 0;
+    errorState.type = "unknown";
+    errorState.timestamp = new Date();
   };
 
   /**
@@ -142,12 +144,24 @@ export function useErrorHandling() {
    * @param fn 异步函数
    * @param maxRetries 最大重试次数
    * @param retryDelay 重试延迟（毫秒）
+   * @param options 重试选项
    */
   const withRetry = async <T>(
     fn: () => Promise<T>,
     maxRetries = 2,
-    retryDelay = 1000
+    retryDelay = 1000,
+    options: {
+      shouldRetry?: (err: any) => boolean;
+      factor?: number;
+      jitter?: boolean;
+    } = {}
   ): Promise<T> => {
+    const {
+      shouldRetry = (err: any) => isNetworkError(err),
+      factor = 2,
+      jitter = true,
+    } = options;
+    
     let lastError: any;
 
     for (let i = 0; i <= maxRetries; i++) {
@@ -162,9 +176,12 @@ export function useErrorHandling() {
         if (i < maxRetries) {
           incrementRetry();
           
-          // 只对网络错误进行重试
-          if (isNetworkError(error)) {
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
+          // 检查是否应该重试
+          if (shouldRetry(error)) {
+            // 计算退避延迟时间（指数退避 + 可选抖动）
+            const base = retryDelay * Math.pow(factor, i);
+            const wait = jitter ? base * (0.5 + Math.random() * 0.5) : base;
+            await new Promise((resolve) => setTimeout(resolve, wait));
             continue;
           }
         }

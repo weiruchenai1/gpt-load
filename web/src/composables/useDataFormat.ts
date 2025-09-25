@@ -99,15 +99,22 @@ export function useDataFormat() {
       return `${num.toFixed(1)}%`;
     }
     
-    if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(1)}M`;
+    // 使用 Intl.NumberFormat 进行本地化的紧凑格式化
+    try {
+      return new Intl.NumberFormat(undefined, {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(num);
+    } catch {
+      // Intl 不可用时的后备方案
+      if (num >= 1_000_000) {
+        return `${(num / 1_000_000).toFixed(1)}M`;
+      }
+      if (num >= 1_000) {
+        return `${(num / 1_000).toFixed(1)}K`;
+      }
+      return num.toString();
     }
-    
-    if (num >= 1000) {
-      return `${(num / 1000).toFixed(1)}K`;
-    }
-    
-    return num.toString();
   };
 
   /**
@@ -122,7 +129,7 @@ export function useDataFormat() {
     }
     
     const num = safeNumber(trend);
-    const sign = num >= 0 ? "+" : "";
+    const sign = num > 0 ? "+" : "";
     return `${sign}${num.toFixed(1)}%`;
   };
 
@@ -132,7 +139,7 @@ export function useDataFormat() {
    * @param defaultText 当数值无效时显示的文本
    * @returns 格式化后的百分比字符串
    */
-  const formatPercentage = (value: unknown, defaultText = "0"): string => {
+  const formatPercentage = (value: unknown, defaultText = "--"): string => {
     if (!isValidNumber(value)) {
       return defaultText;
     }

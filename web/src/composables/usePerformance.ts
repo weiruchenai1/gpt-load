@@ -5,6 +5,8 @@ import type { WatchSource, WatchStopHandle, WatchCallback } from "vue";
  * 性能优化相关的通用工具函数
  */
 export function usePerformance() {
+  // 存储待执行的优化更新定时器
+  const pendingOptimized = new Map<() => void, ReturnType<typeof setTimeout>>();
   /**
    * 防抖函数
    * @param fn 要防抖的函数
@@ -119,8 +121,19 @@ export function usePerformance() {
     if (priority === "high") {
       nextTick(callback);
     } else {
-      const { debouncedFn } = debounce(callback, delays[priority]);
-      nextTick(debouncedFn);
+      // 清除现有的待执行更新
+      const existing = pendingOptimized.get(callback);
+      if (existing) {
+        clearTimeout(existing);
+      }
+      
+      // 设置新的延迟更新
+      const timeoutId = setTimeout(() => {
+        pendingOptimized.delete(callback);
+        nextTick(callback);
+      }, delays[priority]);
+      
+      pendingOptimized.set(callback, timeoutId);
     }
   };
 

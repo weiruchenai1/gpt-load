@@ -71,22 +71,37 @@ const updateAnimatedValues = () => {
     return;
   }
   nextTick(() => {
-    const kcValue = stats.value?.key_count?.value ?? 0;
-    const kcSub = stats.value?.key_count?.sub_value ?? 0;
+    // Guard and normalize key_count values
+    const kcValueRaw = stats.value?.key_count?.value;
+    const kcSubRaw = stats.value?.key_count?.sub_value;
+    const kcValue = kcValueRaw != null ? Number(kcValueRaw) : 0;
+    const kcSub = kcSubRaw != null ? Number(kcSubRaw) : 0;
     const kcTotal = kcValue + kcSub;
-    const keyCountRatio = kcTotal > 0 ? kcValue / kcTotal : 0;
+    const keyCountRatio = kcTotal > 0 ? clamp01(kcValue / kcTotal) : 0;
 
-    const rpmTrendRaw = Number(stats.value?.rpm?.trend);
-    const rpmTrend = Number.isFinite(rpmTrendRaw) ? rpmTrendRaw : 0;
-    const rpmRatio = clamp01((100 + rpmTrend) / 100);
+    // Guard and normalize rpm trend
+    const rpmTrendRaw = stats.value?.rpm?.trend;
+    const rpmTrend = rpmTrendRaw != null ? Number(rpmTrendRaw) : null;
+    const rpmRatio = 
+      rpmTrend != null && Number.isFinite(rpmTrend)
+        ? clamp01((100 + rpmTrend) / 100)
+        : 0;
 
-    const reqTrendRaw = Number(stats.value?.request_count?.trend);
-    const reqTrend = Number.isFinite(reqTrendRaw) ? reqTrendRaw : 0;
-    const reqRatio = clamp01((100 + reqTrend) / 100);
+    // Guard and normalize request_count trend
+    const reqTrendRaw = stats.value?.request_count?.trend;
+    const reqTrend = reqTrendRaw != null ? Number(reqTrendRaw) : null;
+    const reqRatio = 
+      reqTrend != null && Number.isFinite(reqTrend)
+        ? clamp01((100 + reqTrend) / 100)
+        : 0;
 
-    const errValueRaw = Number(stats.value?.error_rate?.value);
-    const errValue = Number.isFinite(errValueRaw) ? errValueRaw : 0;
-    const errRatio = clamp01((100 - errValue) / 100);
+    // Guard and normalize error_rate value
+    const errValueRaw = stats.value?.error_rate?.value;
+    const errValue = errValueRaw != null ? Number(errValueRaw) : null;
+    const errRatio = 
+      errValue != null && Number.isFinite(errValue)
+        ? clamp01((100 - errValue) / 100)
+        : 0;
 
     animatedValues.value = {
       key_count: keyCountRatio,

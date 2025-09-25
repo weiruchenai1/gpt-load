@@ -216,7 +216,9 @@ export function useErrorHandling() {
     fallback: T
   ): Promise<T> => {
     try {
-      return await fn();
+      const result = await fn();
+      clearError();
+      return result;
     } catch (error) {
       handleError(error, { showMessage: false });
       return fallback;

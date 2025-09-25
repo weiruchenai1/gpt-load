@@ -175,7 +175,9 @@ debouncedWatch(
               :aria-valuenow="Math.round((animatedValues.key_count ?? 0) * 100)"
               aria-valuemin="0"
               aria-valuemax="100"
-              :aria-valuetext="`${Math.round((animatedValues.key_count ?? 0) * 100)}%`"
+              :aria-valuetext="tt('accessibility.keyUsageRatio', '密钥使用比例：{percent}%', {
+                percent: Math.round((animatedValues.key_count ?? 0) * 100)
+              })"
               :aria-label="tt('accessibility.keyUsageRatio', '密钥使用比例：{percent}%', {
                 percent: Math.round((animatedValues.key_count ?? 0) * 100)
               })"
@@ -247,7 +249,9 @@ debouncedWatch(
               :aria-valuenow="Math.round((animatedValues.rpm ?? 0) * 100)"
               aria-valuemin="0"
               aria-valuemax="100"
-              :aria-valuetext="`${Math.round((animatedValues.rpm ?? 0) * 100)}%`"
+              :aria-valuetext="tt('accessibility.rpmTrendIndicator', 'RPM 趋势指示：{percent}%', {
+                percent: Math.round((animatedValues.rpm ?? 0) * 100)
+              })"
               :aria-label="tt('accessibility.rpmTrendIndicator', 'RPM 趋势指示：{percent}%', {
                 percent: Math.round((animatedValues.rpm ?? 0) * 100)
               })"
@@ -294,7 +298,9 @@ debouncedWatch(
               :aria-valuenow="Math.round((animatedValues.request_count ?? 0) * 100)"
               aria-valuemin="0"
               aria-valuemax="100"
-              :aria-valuetext="`${Math.round((animatedValues.request_count ?? 0) * 100)}%`"
+              :aria-valuetext="tt('accessibility.requestTrendIndicator', '请求趋势指示：{percent}%', {
+                percent: Math.round((animatedValues.request_count ?? 0) * 100)
+              })"
               :aria-label="tt('accessibility.requestTrendIndicator', '请求趋势指示：{percent}%', {
                 percent: Math.round((animatedValues.request_count ?? 0) * 100)
               })"
@@ -341,7 +347,9 @@ debouncedWatch(
               :aria-valuenow="Math.round((animatedValues.error_rate ?? 0) * 100)"
               aria-valuemin="0"
               aria-valuemax="100"
-              :aria-valuetext="`${Math.round((animatedValues.error_rate ?? 0) * 100)}%`"
+              :aria-valuetext="tt('accessibility.successRateIndicator', '成功率指示：{percent}%', {
+                percent: Math.round((animatedValues.error_rate ?? 0) * 100)
+              })"
               :aria-label="tt('accessibility.successRateIndicator', '成功率指示：{percent}%', {
                 percent: Math.round((animatedValues.error_rate ?? 0) * 100)
               })"

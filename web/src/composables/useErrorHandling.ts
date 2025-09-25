@@ -78,7 +78,7 @@ export function useErrorHandling() {
       error.code === "NETWORK_ERROR" ||
       error.message?.includes("Network Error") ||
       error.message?.includes("fetch") ||
-      !navigator.onLine
+      (typeof navigator !== "undefined" && !navigator.onLine)
     );
   };
 

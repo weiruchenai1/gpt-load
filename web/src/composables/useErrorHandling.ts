@@ -8,7 +8,7 @@ import { useI18n } from "vue-i18n";
 interface ErrorState {
   hasError: boolean;
   message: string;
-  type: "network" | "data" | "permission" | "unknown";
+  type: "network" | "data" | "permission" | "server" | "unknown";
   timestamp: Date;
   retryCount: number;
 }
@@ -21,11 +21,15 @@ export function useErrorHandling() {
   const discrete = typeof window !== "undefined" ? createDiscreteApi(["message"]) : null;
   // unify; when neither is available (SSR/tests), use a no-op
   const message = injected ?? discrete?.message ?? { error: (_msg: string) => {} };
-  const { t } = useI18n();
-  // Return translation or fallback if missing
+  // i18n may be unavailable in SSR/tests; guard and provide fallback
+  const i18n = (() => { try { return useI18n(); } catch { return null; } })();
   const tt = (key: string, fallback: string): string => {
-    const s = t(key) as unknown as string;
-    return s && s !== key ? s : fallback;
+    try {
+      const s = i18n?.t ? (i18n.t as any)(key) as string : key;
+      return s && s !== key ? s : fallback;
+    } catch {
+      return fallback;
+    }
   };
   const errorState = reactive<ErrorState>({
     hasError: false,
@@ -45,7 +49,10 @@ export function useErrorHandling() {
     type: ErrorState["type"] = "unknown"
   ) => {
     errorState.hasError = true;
-    errorState.message = typeof error === "string" ? error : error.message;
+    errorState.message =
+      typeof error === "string"
+        ? error
+        : (error && (error as any).message) || String(error);
     errorState.type = type;
     errorState.timestamp = new Date();
   };
@@ -77,7 +84,12 @@ export function useErrorHandling() {
     // 常见网络错误检查
     return (
       error.code === "NETWORK_ERROR" ||
+      error.code === "ERR_NETWORK" ||
+      error.code === "ECONNABORTED" || // axios 超时
+      /timeout/i.test(error.message ?? "") ||
+      error.name === "AbortError" || // fetch 中止
       error.message?.includes("Network Error") ||
+      error.message?.includes("Failed to fetch") ||
       error.message?.includes("fetch") ||
       (typeof navigator !== "undefined" && !navigator.onLine)
     );
@@ -95,6 +107,12 @@ export function useErrorHandling() {
     
     const status = error.response?.status || error.status;
     return status >= 400 && status < 500 && status !== 401 && status !== 403;
+  };
+
+  const isServerError = (error: any): boolean => {
+    if (!error) return false;
+    const status = error.response?.status || error.status;
+    return status >= 500;
   };
 
   /**
@@ -134,6 +152,9 @@ export function useErrorHandling() {
     } else if (isDataError(error)) {
       errorType = "data";
       userMessage = error.response?.data?.message || tt("error.data", "数据请求失败");
+    } else if (isServerError(error)) {
+      errorType = "server";
+      userMessage = tt("error.server", "服务异常，请稍后重试");
     }
 
     setError(userMessage, errorType);
@@ -261,5 +282,6 @@ export function useErrorHandling() {
     isNetworkError,
     isPermissionError,
     isDataError,
+    isServerError,
   };
 }

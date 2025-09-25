@@ -153,10 +153,8 @@ export function useErrorHandling() {
     for (let i = 0; i <= maxRetries; i++) {
       try {
         const result = await fn();
-        if (i > 0) {
-          // 重试成功，清除错误状态
-          clearError();
-        }
+        // 一旦调用成功，无论是否经历重试都应清除之前的错误状态
+        clearError();
         return result;
       } catch (error) {
         lastError = error;

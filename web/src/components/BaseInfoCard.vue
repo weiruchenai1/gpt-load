@@ -16,6 +16,7 @@ const {
   safeNumberOrNull, 
   formatValue, 
   formatTrend, 
+  formatPercentage,
   safeRatio,
   trendToRatio,
   errorRateToRatio,

@@ -9,15 +9,15 @@ export function usePerformance() {
    * 防抖函数
    * @param fn 要防抖的函数
    * @param delay 延迟时间（毫秒）
-   * @returns 防抖后的函数
+   * @returns 防抖后的函数和取消函数
    */
   const debounce = <T extends (...args: any[]) => any>(
     fn: T,
     delay: number
-  ): T => {
+  ): { debouncedFn: T; cancel: () => void } => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     
-    return ((...args: Parameters<T>) => {
+    const debouncedFn = ((...args: Parameters<T>) => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
@@ -27,6 +27,15 @@ export function usePerformance() {
         timeoutId = null;
       }, delay);
     }) as T;
+
+    const cancel = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    };
+
+    return { debouncedFn, cancel };
   };
 
   /**
@@ -64,8 +73,32 @@ export function usePerformance() {
     delay = 100,
     options: { immediate?: boolean; deep?: boolean } = {}
   ): WatchStopHandle => {
-    const debouncedCallback = debounce(callback, delay);
-    return watch(source, debouncedCallback, options);
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    return watch(
+      source,
+      (value, oldValue, onCleanup) => {
+        // 清除之前的定时器
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        // 注册清理函数
+        onCleanup(() => {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+        });
+
+        // 设置新的延迟执行
+        timeoutId = setTimeout(() => {
+          callback(value, oldValue, onCleanup);
+          timeoutId = null;
+        }, delay);
+      },
+      options
+    );
   };
 
   /**
@@ -86,8 +119,8 @@ export function usePerformance() {
     if (priority === "high") {
       nextTick(callback);
     } else {
-      const debouncedCallback = debounce(callback, delays[priority]);
-      nextTick(debouncedCallback);
+      const { debouncedFn } = debounce(callback, delays[priority]);
+      nextTick(debouncedFn);
     }
   };
 

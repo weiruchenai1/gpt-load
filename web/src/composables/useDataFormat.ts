@@ -127,6 +127,28 @@ export function useDataFormat() {
   };
 
   /**
+   * 格式化百分比显示
+   * @param value 数值（0-1之间的小数或百分比数值）
+   * @param defaultText 当数值无效时显示的文本
+   * @returns 格式化后的百分比字符串
+   */
+  const formatPercentage = (value: unknown, defaultText = "0"): string => {
+    if (!isValidNumber(value)) {
+      return defaultText;
+    }
+    
+    const num = safeNumber(value);
+    
+    // 如果数值小于等于1，认为是小数形式的百分比（如 0.15 = 15%）
+    if (num <= 1) {
+      return `${(num * 100).toFixed(1)}%`;
+    }
+    
+    // 否则认为是已经是百分比数值（如 15 = 15%）
+    return `${num.toFixed(1)}%`;
+  };
+
+  /**
    * 计算比率，安全处理除零情况
    * @param numerator 分子
    * @param denominator 分母
@@ -170,6 +192,7 @@ export function useDataFormat() {
     clamp01,
     formatValue,
     formatTrend,
+    formatPercentage,
     safeRatio,
     trendToRatio,
     errorRateToRatio,

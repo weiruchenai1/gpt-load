@@ -9,6 +9,9 @@ import { useErrorHandling } from "@/composables/useErrorHandling";
 import { usePerformance } from "@/composables/usePerformance";
 import { NSpace, NSpin, NAlert, NButton } from "naive-ui";
 import { onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const dashboardStats = ref<DashboardStatsResponse | null>(null);
 const { withRetry, handleError, errorState, clearError } = useErrorHandling();
@@ -49,14 +52,14 @@ onMounted(() => {
       <n-alert
         v-if="errorState.hasError"
         type="error"
-        :title="errorState.type === 'network' ? '网络连接失败' : '数据加载失败'"
+        :title="errorState.type === 'network' ? t('error.networkConnectionFailed', '网络连接失败') : t('error.dataLoadingFailed', '数据加载失败')"
         closable
         @close="clearError"
       >
         {{ errorState.message }}
         <template #action>
           <n-button size="small" @click="retryLoad" :loading="isLoading">
-            重试
+            {{ t('common.retry', '重试') }}
           </n-button>
         </template>
       </n-alert>

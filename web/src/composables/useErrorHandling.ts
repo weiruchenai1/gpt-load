@@ -1,5 +1,6 @@
 import { reactive } from "vue";
 import { useMessage } from "naive-ui";
+import { useI18n } from "vue-i18n";
 
 /**
  * 错误处理状态
@@ -17,6 +18,7 @@ interface ErrorState {
  */
 export function useErrorHandling() {
   const message = useMessage();
+  const { t } = useI18n();
   const errorState = reactive<ErrorState>({
     hasError: false,
     message: "",
@@ -105,7 +107,7 @@ export function useErrorHandling() {
       showMessage = true,
       logError = true,
       retryable = false,
-      fallbackMessage = "操作失败，请稍后重试",
+      fallbackMessage = t("error.generic", "操作失败，请稍后重试"),
     } = options;
 
     if (logError) {
@@ -117,13 +119,13 @@ export function useErrorHandling() {
 
     if (isNetworkError(error)) {
       errorType = "network";
-      userMessage = "网络连接失败，请检查网络连接";
+      userMessage = t("error.network", "网络连接失败，请检查网络连接");
     } else if (isPermissionError(error)) {
       errorType = "permission";
-      userMessage = "权限不足或登录已过期";
+      userMessage = t("error.permission", "权限不足或登录已过期");
     } else if (isDataError(error)) {
       errorType = "data";
-      userMessage = error.response?.data?.message || "数据请求失败";
+      userMessage = error.response?.data?.message || t("error.data", "数据请求失败");
     }
 
     setError(userMessage, errorType);
@@ -219,11 +221,11 @@ export function useErrorHandling() {
    */
   const getFriendlyErrorMessage = (error: any): string => {
     if (isNetworkError(error)) {
-      return "网络连接失败，请检查网络连接后重试";
+      return t("error.networkRetry", "网络连接失败，请检查网络连接后重试");
     }
     
     if (isPermissionError(error)) {
-      return "权限不足或登录已过期，请重新登录";
+      return t("error.permissionReauth", "权限不足或登录已过期，请重新登录");
     }
     
     if (error?.response?.data?.message) {
@@ -234,7 +236,7 @@ export function useErrorHandling() {
       return error.message;
     }
     
-    return "操作失败，请稍后重试";
+    return t("error.generic", "操作失败，请稍后重试");
   };
 
   return {

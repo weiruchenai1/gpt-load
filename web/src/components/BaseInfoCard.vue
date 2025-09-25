@@ -99,7 +99,7 @@ debouncedWatch(
     role="region"
     :aria-busy="props.loading"
     aria-live="polite"
-    aria-label="仪表盘统计数据"
+    :aria-label="t('accessibility.dashboardStats', '仪表盘统计数据')"
   >
     <n-space vertical size="medium">
       <n-grid 
@@ -108,7 +108,7 @@ debouncedWatch(
         :y-gap="20" 
         responsive="screen"
         role="grid"
-        aria-label="统计卡片网格"
+        :aria-label="t('accessibility.statsGrid', '统计卡片网格')"
       >
         <!-- 密钥数量 -->
         <n-grid-item span="1">
@@ -117,11 +117,11 @@ debouncedWatch(
             class="stat-card" 
             style="animation-delay: 0s"
             role="region"
-            :aria-label="`密钥统计：${
-              stats?.key_count?.value != null
+            :aria-label="t('accessibility.keyStats', '密钥统计：{count} 个密钥', {
+              count: stats?.key_count?.value != null
                 ? formatValue(stats.key_count.value)
                 : '--'
-            } 个密钥`"
+            })"
           >
             <div class="stat-header">
               <div 
@@ -136,7 +136,9 @@ debouncedWatch(
                     type="error" 
                     size="small" 
                     class="stat-trend"
-                    :aria-label="`异常密钥：${stats?.key_count?.sub_value} 个`"
+                    :aria-label="t('accessibility.abnormalKeys', '异常密钥：{count} 个', {
+                      count: stats?.key_count?.sub_value
+                    })"
                   >
                     {{ stats?.key_count?.sub_value }}
                   </n-tag>
@@ -148,11 +150,11 @@ debouncedWatch(
             <div class="stat-content">
               <div 
                 class="stat-value"
-                :aria-label="`密钥总数：${
-                  stats?.key_count?.value != null
+                :aria-label="t('accessibility.totalKeys', '密钥总数：{count}', {
+                  count: stats?.key_count?.value != null
                     ? formatValue(stats.key_count.value)
                     : '--'
-                }`"
+                })"
               >
                 {{
                   stats?.key_count?.value != null
@@ -170,7 +172,9 @@ debouncedWatch(
               aria-valuemin="0"
               aria-valuemax="100"
               :aria-valuetext="`${Math.round((animatedValues.key_count ?? 0) * 100)}%`"
-              :aria-label="`密钥使用比例：${Math.round((animatedValues.key_count ?? 0) * 100)}%`"
+              :aria-label="t('accessibility.keyUsageRatio', '密钥使用比例：{percent}%', {
+                percent: Math.round((animatedValues.key_count ?? 0) * 100)
+              })"
             >
               <div
                 class="stat-bar-fill key-bar"
@@ -189,11 +193,11 @@ debouncedWatch(
             class="stat-card" 
             style="animation-delay: 0.05s"
             role="region"
-            :aria-label="`RPM 统计：${
-              isValidNumber(stats?.rpm?.value)
+            :aria-label="t('accessibility.rpmStats', 'RPM 统计：{rpm} 请求每分钟', {
+              rpm: isValidNumber(stats?.rpm?.value)
                 ? safeNumber(stats?.rpm?.value).toFixed(1)
                 : '--'
-            } 请求每分钟`"
+            })"
           >
             <div class="stat-header">
               <div 
@@ -207,7 +211,9 @@ debouncedWatch(
                 :type="stats?.rpm?.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"
-                :aria-label="`趋势：${formatTrend(stats?.rpm?.trend)}`"
+                :aria-label="t('accessibility.trend', '趋势：{trend}', {
+                  trend: formatTrend(stats?.rpm?.trend)
+                })"
               >
                 {{ formatTrend(stats?.rpm?.trend) }}
               </n-tag>
@@ -216,11 +222,11 @@ debouncedWatch(
             <div class="stat-content">
               <div 
                 class="stat-value"
-                :aria-label="`每分钟请求数：${
-                  isValidNumber(stats?.rpm?.value)
+                :aria-label="t('accessibility.requestsPerMinute', '每分钟请求数：{rpm}', {
+                  rpm: isValidNumber(stats?.rpm?.value)
                     ? safeNumber(stats?.rpm?.value).toFixed(1)
                     : '--'
-                }`"
+                })"
               >
                 {{
                   isValidNumber(stats?.rpm?.value)
@@ -238,7 +244,9 @@ debouncedWatch(
               aria-valuemin="0"
               aria-valuemax="100"
               :aria-valuetext="`${Math.round((animatedValues.rpm ?? 0) * 100)}%`"
-              :aria-label="`RPM 趋势指示：${Math.round((animatedValues.rpm ?? 0) * 100)}%`"
+              :aria-label="t('accessibility.rpmTrendIndicator', 'RPM 趋势指示：{percent}%', {
+                percent: Math.round((animatedValues.rpm ?? 0) * 100)
+              })"
             >
               <div
                 class="stat-bar-fill rpm-bar"
@@ -283,7 +291,9 @@ debouncedWatch(
               aria-valuemin="0"
               aria-valuemax="100"
               :aria-valuetext="`${Math.round((animatedValues.request_count ?? 0) * 100)}%`"
-              :aria-label="`请求趋势指示：${Math.round((animatedValues.request_count ?? 0) * 100)}%`"
+              :aria-label="t('accessibility.requestTrendIndicator', '请求趋势指示：{percent}%', {
+                percent: Math.round((animatedValues.request_count ?? 0) * 100)
+              })"
             >
               <div
                 class="stat-bar-fill request-bar"
@@ -328,7 +338,9 @@ debouncedWatch(
               aria-valuemin="0"
               aria-valuemax="100"
               :aria-valuetext="`${Math.round((animatedValues.error_rate ?? 0) * 100)}%`"
-              :aria-label="`成功率指示：${Math.round((animatedValues.error_rate ?? 0) * 100)}%`"
+              :aria-label="t('accessibility.successRateIndicator', '成功率指示：{percent}%', {
+                percent: Math.round((animatedValues.error_rate ?? 0) * 100)
+              })"
             >
               <div
                 class="stat-bar-fill error-bar"

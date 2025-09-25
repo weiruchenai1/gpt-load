@@ -18,8 +18,9 @@ interface ErrorState {
  */
 export function useErrorHandling() {
   const injected = (() => { try { return useMessage(); } catch { return null; } })();
-  const { message: discreteMessage } = createDiscreteApi(["message"]);
-  const message = injected ?? discreteMessage;
+  const discrete = typeof window !== "undefined" ? createDiscreteApi(["message"]) : null;
+  // unify; when neither is available (SSR/tests), use a no-op
+  const message = injected ?? discrete?.message ?? { error: (_msg: string) => {} };
   const { t } = useI18n();
   // Return translation or fallback if missing
   const tt = (key: string, fallback: string): string => {
@@ -185,10 +186,10 @@ export function useErrorHandling() {
         lastError = error;
         
         if (i < maxRetries) {
-          incrementRetry();
-          
           // 检查是否应该重试
           if (shouldRetry(error)) {
+            // 即将发起重试时再增加计数
+            incrementRetry();
             // 计算退避延迟时间（指数退避 + 可选抖动）
             const base = retryDelay * Math.pow(factor, i);
             const wait = jitter ? base * (0.5 + Math.random() * 0.5) : base;

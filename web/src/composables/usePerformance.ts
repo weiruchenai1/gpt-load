@@ -24,10 +24,13 @@ export function usePerformance() {
   const debounce = <T extends (...args: any[]) => any>(
     fn: T,
     delay: number
-  ): { debouncedFn: T; cancel: () => void } => {
+  ): {
+    debouncedFn: (...args: Parameters<T>) => void;
+    cancel: () => void;
+  } => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     
-    const debouncedFn = ((...args: Parameters<T>) => {
+    const debouncedFn = (...args: Parameters<T>) => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
@@ -36,7 +39,7 @@ export function usePerformance() {
         fn(...args);
         timeoutId = null;
       }, delay);
-    }) as T;
+    };
 
     const cancel = () => {
       if (timeoutId) {
@@ -44,6 +47,9 @@ export function usePerformance() {
         timeoutId = null;
       }
     };
+
+    // 组件卸载时自动取消
+    onBeforeUnmount(cancel);
 
     return { debouncedFn, cancel };
   };
@@ -127,7 +133,14 @@ export function usePerformance() {
     };
 
     if (priority === "high") {
+      // 清除现有的待执行更新，避免重复执行
+      const existing = pendingOptimized.get(callback);
+      if (existing) {
+        clearTimeout(existing);
+        pendingOptimized.delete(callback);
+      }
       nextTick(callback);
+      return;
     } else {
       // 清除现有的待执行更新
       const existing = pendingOptimized.get(callback);

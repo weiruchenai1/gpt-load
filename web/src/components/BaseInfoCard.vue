@@ -117,7 +117,11 @@ debouncedWatch(
             class="stat-card" 
             style="animation-delay: 0s"
             role="region"
-            :aria-label="`密钥统计：${formatValue(stats?.key_count?.value)} 个密钥`"
+            :aria-label="`密钥统计：${
+              stats?.key_count?.value != null
+                ? formatValue(stats.key_count.value)
+                : '--'
+            } 个密钥`"
           >
             <div class="stat-header">
               <div 
@@ -144,9 +148,17 @@ debouncedWatch(
             <div class="stat-content">
               <div 
                 class="stat-value"
-                :aria-label="`密钥总数：${formatValue(stats?.key_count?.value)}`"
+                :aria-label="`密钥总数：${
+                  stats?.key_count?.value != null
+                    ? formatValue(stats.key_count.value)
+                    : '--'
+                }`"
               >
-                {{ formatValue(stats?.key_count?.value) }}
+                {{
+                  stats?.key_count?.value != null
+                    ? formatValue(stats.key_count.value)
+                    : "--"
+                }}
               </div>
               <div class="stat-title">{{ t("dashboard.totalKeys") }}</div>
             </div>
@@ -255,7 +267,11 @@ debouncedWatch(
 
             <div class="stat-content">
               <div class="stat-value">
-                {{ formatValue(stats?.request_count?.value) }}
+                {{
+                  stats?.request_count?.value != null
+                    ? formatValue(stats.request_count.value)
+                    : "--"
+                }}
               </div>
               <div class="stat-title">{{ t("dashboard.requests24h") }}</div>
             </div>
@@ -296,7 +312,11 @@ debouncedWatch(
 
             <div class="stat-content">
               <div class="stat-value">
-                {{ formatValue(stats?.error_rate?.value, "rate") }}
+                {{
+                  stats?.error_rate?.value != null
+                    ? formatValue(stats.error_rate.value, "rate")
+                    : "--"
+                }}
               </div>
               <div class="stat-title">{{ t("dashboard.errorRate24h") }}</div>
             </div>

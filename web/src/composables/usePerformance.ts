@@ -1,4 +1,4 @@
-import { ref, watch, nextTick } from "vue";
+import { ref, watch, nextTick, onBeforeUnmount } from "vue";
 import type { WatchSource, WatchStopHandle, WatchCallback } from "vue";
 
 /**
@@ -7,6 +7,14 @@ import type { WatchSource, WatchStopHandle, WatchCallback } from "vue";
 export function usePerformance() {
   // 存储待执行的优化更新定时器
   const pendingOptimized = new Map<() => void, ReturnType<typeof setTimeout>>();
+
+  // 组件卸载时清理所有待执行的定时器
+  onBeforeUnmount(() => {
+    pendingOptimized.forEach((timeoutId) => {
+      clearTimeout(timeoutId);
+    });
+    pendingOptimized.clear();
+  });
   /**
    * 防抖函数
    * @param fn 要防抖的函数

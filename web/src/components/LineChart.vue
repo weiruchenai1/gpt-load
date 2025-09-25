@@ -2,11 +2,13 @@
 import { getDashboardChart, getGroupList } from "@/api/dashboard";
 import type { ChartData } from "@/types/models";
 import { getGroupDisplayName } from "@/utils/display";
+import { useDataFormat } from "@/composables/useDataFormat";
 import { NSelect, NSpin } from "naive-ui";
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
+const { formatValue } = useDataFormat();
 
 // 图表数据
 const chartData = ref<ChartData | null>(null);
@@ -202,16 +204,6 @@ const generateAreaPath = (data: number[]) => {
   return pathParts.join(" ");
 };
 
-// 数字格式化
-const formatNumber = (value: number) => {
-  // if (value >= 1000000) {
-  //   return `${(value / 1000000).toFixed(1)}M`;
-  // } else
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}K`;
-  }
-  return Math.round(value).toString();
-};
 
 const isErrorDataset = (label: string) => {
   return label.includes("失败") || label.includes("Error") || label.includes("エラー");
@@ -439,7 +431,7 @@ onMounted(() => {
                 text-anchor="end"
                 class="axis-label"
               >
-                {{ formatNumber(tick) }}
+                {{ formatValue(tick) }}
               </text>
             </g>
           </g>
@@ -550,7 +542,7 @@ onMounted(() => {
           <div class="tooltip-time">{{ tooltipData.time }}</div>
           <div v-for="dataset in tooltipData.datasets" :key="dataset.label" class="tooltip-value">
             <span class="tooltip-color" :style="{ backgroundColor: dataset.color }" />
-            {{ dataset.label }}: {{ formatNumber(dataset.value) }}
+            {{ dataset.label }}: {{ formatValue(dataset.value) }}
           </div>
         </div>
       </div>

@@ -1,0 +1,120 @@
+/**
+ * 数据格式化相关的通用工具函数
+ */
+export function useDataFormat() {
+  /**
+   * 安全地将值转换为数字，处理 null/undefined 情况
+   * @param value 要转换的值
+   * @param fallback 当值无效时的默认值
+   * @returns 转换后的数字
+   */
+  const safeNumber = (value: unknown, fallback = 0): number => {
+    if (value == null) return fallback;
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  };
+
+  /**
+   * 安全地将值转换为数字，支持 null 返回值
+   * @param value 要转换的值
+   * @returns 转换后的数字或 null
+   */
+  const safeNumberOrNull = (value: unknown): number | null => {
+    if (value == null) return null;
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  };
+
+  /**
+   * 将数值限制在 0-1 之间
+   * @param value 要限制的数值
+   * @returns 限制在 0-1 之间的数值
+   */
+  const clamp01 = (value: number): number => {
+    if (!Number.isFinite(value)) return 0;
+    return Math.min(Math.max(value, 0), 1);
+  };
+
+  /**
+   * 格式化数值显示
+   * @param value 要格式化的值
+   * @param type 数值类型：count（数量）或 rate（百分比）
+   * @returns 格式化后的字符串
+   */
+  const formatValue = (value: unknown, type: "count" | "rate" = "count"): string => {
+    const num = safeNumber(value);
+    
+    if (type === "rate") {
+      return `${num.toFixed(1)}%`;
+    }
+    
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M`;
+    }
+    
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K`;
+    }
+    
+    return num.toString();
+  };
+
+  /**
+   * 格式化趋势显示
+   * @param trend 趋势数值
+   * @returns 格式化后的趋势字符串（带符号）
+   */
+  const formatTrend = (trend: unknown): string => {
+    const num = safeNumber(trend);
+    const sign = num >= 0 ? "+" : "";
+    return `${sign}${num.toFixed(1)}%`;
+  };
+
+  /**
+   * 计算比率，安全处理除零情况
+   * @param numerator 分子
+   * @param denominator 分母
+   * @returns 0-1 之间的比率
+   */
+  const safeRatio = (numerator: number, denominator: number): number => {
+    if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) {
+      return 0;
+    }
+    return clamp01(numerator / denominator);
+  };
+
+  /**
+   * 基于趋势计算动画比率
+   * @param trend 趋势值（百分比）
+   * @param baseValue 基准值（默认 100）
+   * @returns 0-1 之间的比率
+   */
+  const trendToRatio = (trend: unknown, baseValue = 100): number => {
+    const trendNum = safeNumberOrNull(trend);
+    if (trendNum === null) return 0;
+    return clamp01((baseValue + trendNum) / baseValue);
+  };
+
+  /**
+   * 基于错误率计算成功率比率（错误率越高，比率越低）
+   * @param errorRate 错误率
+   * @param baseValue 基准值（默认 100）
+   * @returns 0-1 之间的比率
+   */
+  const errorRateToRatio = (errorRate: unknown, baseValue = 100): number => {
+    const errorNum = safeNumberOrNull(errorRate);
+    if (errorNum === null) return 0;
+    return clamp01((baseValue - errorNum) / baseValue);
+  };
+
+  return {
+    safeNumber,
+    safeNumberOrNull,
+    clamp01,
+    formatValue,
+    formatTrend,
+    safeRatio,
+    trendToRatio,
+    errorRateToRatio,
+  };
+}

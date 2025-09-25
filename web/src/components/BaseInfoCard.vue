@@ -3,19 +3,22 @@ import type { DashboardStatsResponse } from "@/types/models";
 import { NCard, NGrid, NGridItem, NSpace, NTag, NTooltip } from "naive-ui";
 import { computed, ref, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
+import { useDataFormat } from "@/composables/useDataFormat";
 import KeyIcon from "./icons/KeyIcon.vue";
 import ClockIcon from "./icons/ClockIcon.vue";
 import TrendingUpIcon from "./icons/TrendingUpIcon.vue";
 import ShieldCheckIcon from "./icons/ShieldCheckIcon.vue";
 
 const { t } = useI18n();
-
-// 工具函数：将数值限制在0-1之间
-const clamp01 = (n: number) => {
-  const x = Number(n);
-  if (!Number.isFinite(x)) return 0;
-  return Math.min(Math.max(x, 0), 1);
-};
+const { 
+  safeNumber, 
+  safeNumberOrNull, 
+  formatValue, 
+  formatTrend, 
+  safeRatio,
+  trendToRatio,
+  errorRateToRatio 
+} = useDataFormat();
 
 // Props
 interface Props {
@@ -41,23 +44,6 @@ const animatedValues = ref<{
   error_rate: 0,
 });
 
-// 格式化数值显示
-const formatValue = (value: number, type: "count" | "rate" = "count"): string => {
-  if (type === "rate") {
-    return `${value.toFixed(1)}%`;
-  }
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}K`;
-  }
-  return value.toString();
-};
-
-// 格式化趋势显示
-const formatTrend = (trend: number): string => {
-  const sign = trend >= 0 ? "+" : "";
-  return `${sign}${trend.toFixed(1)}%`;
-};
-
 // 监听stats变化并更新动画值
 const updateAnimatedValues = () => {
   if (!stats.value) {
@@ -71,37 +57,15 @@ const updateAnimatedValues = () => {
     return;
   }
   nextTick(() => {
-    // Guard and normalize key_count values
-    const kcValueRaw = stats.value?.key_count?.value;
-    const kcSubRaw = stats.value?.key_count?.sub_value;
-    const kcValue = kcValueRaw != null ? Number(kcValueRaw) : 0;
-    const kcSub = kcSubRaw != null ? Number(kcSubRaw) : 0;
-    const kcTotal = kcValue + kcSub;
-    const keyCountRatio = kcTotal > 0 ? clamp01(kcValue / kcTotal) : 0;
+    // 计算 key_count 比率
+    const kcValue = safeNumber(stats.value?.key_count?.value);
+    const kcSub = safeNumber(stats.value?.key_count?.sub_value);
+    const keyCountRatio = safeRatio(kcValue, kcValue + kcSub);
 
-    // Guard and normalize rpm trend
-    const rpmTrendRaw = stats.value?.rpm?.trend;
-    const rpmTrend = rpmTrendRaw != null ? Number(rpmTrendRaw) : null;
-    const rpmRatio = 
-      rpmTrend != null && Number.isFinite(rpmTrend)
-        ? clamp01((100 + rpmTrend) / 100)
-        : 0;
-
-    // Guard and normalize request_count trend
-    const reqTrendRaw = stats.value?.request_count?.trend;
-    const reqTrend = reqTrendRaw != null ? Number(reqTrendRaw) : null;
-    const reqRatio = 
-      reqTrend != null && Number.isFinite(reqTrend)
-        ? clamp01((100 + reqTrend) / 100)
-        : 0;
-
-    // Guard and normalize error_rate value
-    const errValueRaw = stats.value?.error_rate?.value;
-    const errValue = errValueRaw != null ? Number(errValueRaw) : null;
-    const errRatio = 
-      errValue != null && Number.isFinite(errValue)
-        ? clamp01((100 - errValue) / 100)
-        : 0;
+    // 计算趋势相关比率
+    const rpmRatio = trendToRatio(stats.value?.rpm?.trend);
+    const reqRatio = trendToRatio(stats.value?.request_count?.trend);
+    const errRatio = errorRateToRatio(stats.value?.error_rate?.value);
 
     animatedValues.value = {
       key_count: keyCountRatio,
@@ -143,7 +107,7 @@ watch(
 
             <div class="stat-content">
               <div class="stat-value">
-                {{ formatValue(Number(stats?.key_count?.value ?? 0)) }}
+                {{ formatValue(stats?.key_count?.value) }}
               </div>
               <div class="stat-title">{{ t("dashboard.totalKeys") }}</div>
             </div>
@@ -170,13 +134,13 @@ watch(
                 size="small"
                 class="stat-trend"
               >
-                {{ stats ? formatTrend(stats.rpm.trend) : "--" }}
+                {{ formatTrend(stats.rpm.trend) }}
               </n-tag>
             </div>
 
             <div class="stat-content">
               <div class="stat-value">
-                {{ stats?.rpm?.value != null ? Number(stats.rpm.value).toFixed(1) : "0.0" }}
+                {{ stats?.rpm?.value != null ? safeNumber(stats.rpm.value).toFixed(1) : "0.0" }}
               </div>
               <div class="stat-title">{{ t("dashboard.rpm10Min") }}</div>
             </div>
@@ -203,17 +167,13 @@ watch(
                 size="small"
                 class="stat-trend"
               >
-                {{ stats ? formatTrend(stats.request_count.trend) : "--" }}
+                {{ formatTrend(stats.request_count.trend) }}
               </n-tag>
             </div>
 
             <div class="stat-content">
               <div class="stat-value">
-                {{
-                  stats?.request_count?.value != null
-                    ? formatValue(Number(stats.request_count.value))
-                    : "--"
-                }}
+                {{ formatValue(stats?.request_count?.value) }}
               </div>
               <div class="stat-title">{{ t("dashboard.requests24h") }}</div>
             </div>
@@ -240,17 +200,13 @@ watch(
                 size="small"
                 class="stat-trend"
               >
-                {{ stats?.error_rate ? formatTrend(stats.error_rate.trend) : "--" }}
+                {{ formatTrend(stats.error_rate.trend) }}
               </n-tag>
             </div>
 
             <div class="stat-content">
               <div class="stat-value">
-                {{
-                  stats?.error_rate?.value != null
-                    ? formatValue(Number(stats.error_rate.value), "rate")
-                    : "--"
-                }}
+                {{ formatValue(stats?.error_rate?.value, "rate") }}
               </div>
               <div class="stat-title">{{ t("dashboard.errorRate24h") }}</div>
             </div>
@@ -271,143 +227,53 @@ watch(
 </template>
 
 <style scoped>
+@import "@/styles/components.scss";
+
 .stats-container {
   width: 100%;
-  animation: fadeInUp 0.2s ease-out;
   margin-bottom: 16px;
+  @include stat-animations;
 }
 
 .stat-card {
-  background: var(--card-bg);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid var(--border-color-light);
-  position: relative;
-  overflow: hidden;
-  animation: slideInUp 0.2s ease-out both;
-  transition: all 0.2s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  @include stat-card;
+  @include stat-animation-delays;
 }
 
 .stat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  @include stat-header;
 }
 
 .stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--border-radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  box-shadow: var(--shadow-md);
+  @include stat-icon;
 }
 
-.key-icon {
-  background: var(--primary-color);
-  color: white;
-}
-
-.rpm-icon {
-  background: var(--success-color);
-  color: white;
-}
-
-.request-icon {
-  background: var(--warning-color, #f59e0b);
-  color: white;
-}
-
-.error-icon {
-  background: var(--error-color);
-  color: white;
-}
+@include stat-icon-colors;
 
 .stat-trend {
-  font-weight: 600;
+  @include stat-trend;
 }
 
 .stat-content {
-  margin-bottom: 16px;
+  @include stat-content;
 }
 
 .stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--text-primary);
-  margin-bottom: 4px;
+  @include stat-value;
 }
 
 .stat-title {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  font-weight: 500;
+  @include stat-title;
 }
 
 .stat-bar {
-  width: 100%;
-  height: 4px;
-  background: var(--border-color);
-  border-radius: 2px;
-  overflow: hidden;
-  position: relative;
+  @include stat-bar;
 }
 
 .stat-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.5s ease-out;
-  transition-delay: 0.2s;
+  @include stat-bar-fill;
 }
 
-.key-bar {
-  background: var(--primary-color);
-}
-
-.rpm-bar {
-  background: var(--success-color);
-}
-
-.request-bar {
-  background: var(--warning-color, #f59e0b);
-}
-
-.error-bar {
-  background: var(--error-color);
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 响应式网格 */
-:deep(.n-grid-item) {
-  min-width: 0;
-}
+@include stat-bar-colors;
+@include stat-grid-responsive;
 </style>

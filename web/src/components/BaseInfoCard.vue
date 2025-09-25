@@ -97,6 +97,8 @@ debouncedWatch(
   <div 
     class="stats-container"
     role="region"
+    :aria-busy="props.loading"
+    aria-live="polite"
     aria-label="仪表盘统计数据"
   >
     <n-space vertical size="medium">
@@ -155,6 +157,7 @@ debouncedWatch(
               :aria-valuenow="Math.round((animatedValues.key_count ?? 0) * 100)"
               aria-valuemin="0"
               aria-valuemax="100"
+              :aria-valuetext="`${Math.round((animatedValues.key_count ?? 0) * 100)}%`"
               :aria-label="`密钥使用比例：${Math.round((animatedValues.key_count ?? 0) * 100)}%`"
             >
               <div
@@ -188,13 +191,13 @@ debouncedWatch(
                 <clock-icon />
               </div>
               <n-tag
-                v-if="stats?.rpm?.trend != null && stats.rpm.trend !== 0"
-                :type="stats?.rpm.trend_is_growth ? 'success' : 'error'"
+                v-if="stats?.rpm?.trend != null && stats?.rpm?.trend !== 0"
+                :type="stats?.rpm?.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"
-                :aria-label="`趋势：${formatTrend(stats.rpm.trend)}`"
+                :aria-label="`趋势：${formatTrend(stats?.rpm?.trend)}`"
               >
-                {{ formatTrend(stats.rpm.trend) }}
+                {{ formatTrend(stats?.rpm?.trend) }}
               </n-tag>
             </div>
 
@@ -222,6 +225,7 @@ debouncedWatch(
               :aria-valuenow="Math.round((animatedValues.rpm ?? 0) * 100)"
               aria-valuemin="0"
               aria-valuemax="100"
+              :aria-valuetext="`${Math.round((animatedValues.rpm ?? 0) * 100)}%`"
               :aria-label="`RPM 趋势指示：${Math.round((animatedValues.rpm ?? 0) * 100)}%`"
             >
               <div
@@ -240,12 +244,12 @@ debouncedWatch(
             <div class="stat-header">
               <div class="stat-icon request-icon" aria-hidden="true"><trending-up-icon /></div>
               <n-tag
-                v-if="stats?.request_count?.trend != null && stats.request_count.trend !== 0"
-                :type="stats?.request_count.trend_is_growth ? 'success' : 'error'"
+                v-if="stats?.request_count?.trend != null && stats?.request_count?.trend !== 0"
+                :type="stats?.request_count?.trend_is_growth ? 'success' : 'error'"
                 size="small"
                 class="stat-trend"
               >
-                {{ formatTrend(stats.request_count.trend) }}
+                {{ formatTrend(stats?.request_count?.trend) }}
               </n-tag>
             </div>
 
@@ -256,7 +260,15 @@ debouncedWatch(
               <div class="stat-title">{{ t("dashboard.requests24h") }}</div>
             </div>
 
-            <div class="stat-bar">
+            <div 
+              class="stat-bar"
+              role="progressbar"
+              :aria-valuenow="Math.round((animatedValues.request_count ?? 0) * 100)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              :aria-valuetext="`${Math.round((animatedValues.request_count ?? 0) * 100)}%`"
+              :aria-label="`请求趋势指示：${Math.round((animatedValues.request_count ?? 0) * 100)}%`"
+            >
               <div
                 class="stat-bar-fill request-bar"
                 :style="{
@@ -273,12 +285,12 @@ debouncedWatch(
             <div class="stat-header">
               <div class="stat-icon error-icon" aria-hidden="true"><shield-check-icon /></div>
               <n-tag
-                v-if="stats?.error_rate?.trend != null && stats.error_rate.trend !== 0"
-                :type="stats?.error_rate.trend_is_growth ? 'error' : 'success'"
+                v-if="stats?.error_rate?.trend != null && stats?.error_rate?.trend !== 0"
+                :type="stats?.error_rate?.trend_is_growth ? 'error' : 'success'"
                 size="small"
                 class="stat-trend"
               >
-                {{ formatTrend(stats.error_rate.trend) }}
+                {{ formatTrend(stats?.error_rate?.trend) }}
               </n-tag>
             </div>
 
@@ -289,7 +301,15 @@ debouncedWatch(
               <div class="stat-title">{{ t("dashboard.errorRate24h") }}</div>
             </div>
 
-            <div class="stat-bar">
+            <div 
+              class="stat-bar"
+              role="progressbar"
+              :aria-valuenow="Math.round((animatedValues.error_rate ?? 0) * 100)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              :aria-valuetext="`${Math.round((animatedValues.error_rate ?? 0) * 100)}%`"
+              :aria-label="`成功率指示：${Math.round((animatedValues.error_rate ?? 0) * 100)}%`"
+            >
               <div
                 class="stat-bar-fill error-bar"
                 :style="{

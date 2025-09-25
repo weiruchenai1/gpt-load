@@ -183,14 +183,17 @@ export function useDataFormat() {
 
   /**
    * 基于错误率计算成功率比率（错误率越高，比率越低）
-   * @param errorRate 错误率
+   * @param errorRate 错误率（可能是0-1小数或0-100百分比）
    * @param baseValue 基准值（默认 100）
    * @returns 0-1 之间的比率
    */
   const errorRateToRatio = (errorRate: unknown, baseValue = 100): number => {
     const errorNum = safeNumberOrNull(errorRate);
     if (errorNum === null) return 0;
-    return clamp01((baseValue - errorNum) / baseValue);
+    
+    // 标准化错误率到与 baseValue 相同的单位
+    const normalizedError = errorNum <= 1 ? errorNum * baseValue : errorNum;
+    return clamp01((baseValue - normalizedError) / baseValue);
   };
 
   return {
